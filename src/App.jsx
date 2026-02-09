@@ -2,37 +2,9 @@ import { useState } from 'react'
 import AlumniForm from './components/AlumniForm'
 import PdfViewer from './components/PdfViewer'
 import Loader from './components/Loader'
+import { fetchFromScript } from './api/scriptApi'
 
-function fetchFromScript(scriptUrl, school, type = 'logo') {
-  return new Promise((resolve) => {
-    const callbackName = 'scriptCallback_' + Date.now() + '_' + type
-    const params = new URLSearchParams({
-      school,
-      callback: callbackName,
-      ...(type !== 'logo' && { type }),
-    })
-    const url = scriptUrl + '?' + params.toString()
-
-    window[callbackName] = (data) => {
-      delete window[callbackName]
-      scriptEl.remove()
-      if (type === 'template') {
-        resolve({ fileId: data?.fileId ?? null, content: data?.content ?? null })
-      } else {
-        resolve({ fileId: data?.fileId ?? null })
-      }
-    }
-
-    const scriptEl = document.createElement('script')
-    scriptEl.src = url
-    scriptEl.onerror = () => {
-      delete window[callbackName]
-      scriptEl.remove()
-      resolve(type === 'template' ? { fileId: null, content: null } : { fileId: null })
-    }
-    document.body.appendChild(scriptEl)
-  })
-}
+const DEFAULT_WEBHOOK_URL = 'https://infinityw.com/webhook/5d2d6a91-e43c-4187-be71-97af7b67dff8'
 
 function App() {
   const [showForm, setShowForm] = useState(true)
@@ -44,6 +16,13 @@ function App() {
     setLoading(true)
     setError(null)
     setPdfSource(null)
+
+    const webhookUrl = import.meta.env.VITE_WEBHOOK_URL || DEFAULT_WEBHOOK_URL
+    if (!webhookUrl) {
+      setError('Webhook URL is not configured. Please set VITE_WEBHOOK_URL in .env.')
+      setLoading(false)
+      return
+    }
 
     try {
       let logoFileId = null
@@ -68,7 +47,6 @@ function App() {
         templateContent,
       }
 
-      const webhookUrl = import.meta.env.VITE_WEBHOOK_URL
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
@@ -77,11 +55,20 @@ function App() {
         body: JSON.stringify(payload),
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to generate Alumni ID. Please try again.')
+      let data
+      try {
+        data = await response.json()
+      } catch {
+        throw new Error('Invalid response from server. Please try again.')
       }
 
-      const data = await response.json()
+      if (!response.ok) {
+        const status = response.status
+        let message = data?.message || data?.error || 'Failed to generate Alumni ID. Please try again.'
+        if (status >= 500 && !data?.message && !data?.error) message = 'Server error. Please try again later.'
+        else if (status >= 400 && !data?.message && !data?.error) message = 'Request failed. Please check your data and try again.'
+        throw new Error(message)
+      }
 
       if (data.pdfUrl) {
         setPdfSource(data.pdfUrl)
@@ -117,9 +104,11 @@ function App() {
   return (
     <div className="app">
       {loading && <Loader />}
-      {!loading && (
-        <AlumniForm onSubmit={handleSubmit} error={error} />
-      )}
+      <AlumniForm
+        onSubmit={handleSubmit}
+        error={error}
+        disabled={loading}
+      />
     </div>
   )
 }

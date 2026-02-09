@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 
 const IMAGE_ACCEPT = 'image/jpeg,image/png,image/gif,image/webp'
+const MAX_PHOTO_SIZE_BYTES = 1 * 1024 * 1024 // 1 MB
 
 const SCHOOL_OPTIONS = [
   'Ateneo de Manila University',
@@ -75,7 +76,7 @@ function fileToBase64(file) {
   })
 }
 
-function AlumniForm({ onSubmit, error }) {
+function AlumniForm({ onSubmit, error, disabled = false }) {
   const [formData, setFormData] = useState({
     fullName: '',
     school: '',
@@ -124,6 +125,8 @@ function AlumniForm({ onSubmit, error }) {
       errors.photo = 'Photo is required.'
     } else if (!formData.photo.type.startsWith('image/')) {
       errors.photo = 'Only image files are allowed (e.g. JPEG, PNG, GIF, WebP).'
+    } else if (formData.photo.size > MAX_PHOTO_SIZE_BYTES) {
+      errors.photo = `Photo must be 1 MB or smaller (current size: ${(formData.photo.size / 1024).toFixed(0)} KB).`
     }
 
     setFieldErrors(errors)
@@ -284,7 +287,7 @@ function AlumniForm({ onSubmit, error }) {
             )}
           </div>
 
-          <button type="submit" className="btn btn-submit">
+          <button type="submit" className="btn btn-submit" disabled={disabled}>
             Submit
           </button>
         </form>

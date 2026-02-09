@@ -225,6 +225,12 @@ body {
   transform: scale(0.98);
 }
 
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .btn-submit {
   margin-top: 0.5rem;
   background: var(--color-primary);
