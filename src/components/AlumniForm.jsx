@@ -112,7 +112,11 @@ function AlumniForm({ onSubmit, error, disabled = false }) {
   const validate = () => {
     const errors = {}
 
-    if (!formData.fullName?.trim()) errors.fullName = 'Full name is required.'
+    if (!formData.fullName?.trim()) {
+      errors.fullName = 'Full name is required.'
+    } else if (/\d/.test(formData.fullName)) {
+      errors.fullName = 'Full name must not contain numbers.'
+    }
     if (!formData.school?.trim()) errors.school = 'School is required.'
     if (!formData.graduationYear?.toString().trim()) {
       errors.graduationYear = 'Graduation year is required.'
@@ -120,7 +124,11 @@ function AlumniForm({ onSubmit, error, disabled = false }) {
       errors.graduationYear = 'Graduation year must be a number.'
     }
     if (!formData.program?.trim()) errors.program = 'Program is required.'
-    if (!formData.studentNumber?.trim()) errors.studentNumber = 'Student number is required.'
+    if (!formData.studentNumber?.trim()) {
+      errors.studentNumber = 'Student number is required.'
+    } else if (/[a-zA-Z]/.test(formData.studentNumber)) {
+      errors.studentNumber = 'Student number must not contain letters.'
+    }
     if (!formData.photo) {
       errors.photo = 'Photo is required.'
     } else if (!formData.photo.type.startsWith('image/')) {
