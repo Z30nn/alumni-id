@@ -4,8 +4,6 @@ import PdfViewer from './components/PdfViewer'
 import Loader from './components/Loader'
 import { fetchFromScript } from './api/scriptApi'
 
-const DEFAULT_WEBHOOK_URL = 'https://infinityw.com/webhook/5d2d6a91-e43c-4187-be71-97af7b67dff8'
-
 function App() {
   const [showForm, setShowForm] = useState(true)
   const [loading, setLoading] = useState(false)
@@ -17,7 +15,7 @@ function App() {
     setError(null)
     setPdfSource(null)
 
-    const webhookUrl = import.meta.env.VITE_WEBHOOK_URL || DEFAULT_WEBHOOK_URL
+    const webhookUrl = import.meta.env.VITE_WEBHOOK_URL
     if (!webhookUrl) {
       setError('Webhook URL is not configured. Please set VITE_WEBHOOK_URL in .env.')
       setLoading(false)
