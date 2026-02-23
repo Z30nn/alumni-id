@@ -407,6 +407,18 @@ function AlumniForm({ onSubmit, error, disabled = false, initialData = null, onB
         <div className="card">
           <div className="card-header">
             <div className="card-header-left">
+              {onBackToDashboard && (
+                <button
+                  type="button"
+                  className="btn-back-to-dashboard"
+                  onClick={onBackToDashboard}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+                    <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Back to Dashboard
+                </button>
+              )}
               <h1>Alumni ID Request</h1>
               <p>Complete all fields to generate your verified ID</p>
             </div>

@@ -423,6 +423,32 @@ body {
   color: var(--ink-light);
 }
 
+.btn-back-to-dashboard {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--ink-light);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.btn-back-to-dashboard:hover {
+  background: var(--bg);
+  color: var(--ink);
+  border-color: var(--ink-mid);
+}
+
+.btn-back-to-dashboard svg {
+  stroke: currentColor;
+}
+
 .card-header-left h1 {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.5rem;
@@ -733,29 +759,6 @@ input[type='file'] {
   justify-content: center;
   gap: 10px;
   height: 48px;
-<<<<<<< HEAD
-  border: 3px solid var(--color-border);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  animation: spin 0.9s linear infinite;
-}
-
-.loader-text {
-  margin: 1rem 0 0;
-  font-size: 0.95rem;
-  color: var(--color-text-muted);
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* -------------------------------------------------------------------
-   PDF viewer (card-style embed, ID proportions)
-   ------------------------------------------------------------------- */
-
   width: 100%;
   padding: 0 18px;
   border-radius: 12px;
@@ -775,6 +778,42 @@ input[type='file'] {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* -------------------------------------------------------------------
+   Loader
+   ------------------------------------------------------------------- */
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 25, 35, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loader-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.loader-text {
+  margin: 1rem 0 0;
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* -------------------------------------------------------------------
@@ -832,54 +871,73 @@ input[type='file'] {
   align-items: center;
 }
 
-.btn-generate {
-  background: var(--ink);
-  border-color: transparent;
-  color: #fff;
+/* Base button styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: inherit;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+  white-space: nowrap;
 }
 
-.btn-outline {
-  background: transparent;
-  color: var(--ink-light);
-  border: 1px solid var(--border);
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
-.btn-outline:hover {
-  background: var(--bg);
-  color: var(--ink);
+.btn-sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: 8px;
 }
 
 .btn-primary {
   background: var(--ink);
-  border: 1px solid var(--ink);
+  border-color: var(--ink);
   color: #fff;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  display: inline-block;
-  transition: background 120ms ease, border-color 120ms ease;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: var(--ink-mid);
   border-color: var(--ink-mid);
 }
 
 .btn-secondary {
   background: var(--gold);
-  border: 1px solid var(--gold);
+  border-color: var(--gold);
   color: #fff;
-  padding: 0.4rem 0.75rem;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 120ms ease, border-color 120ms ease;
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   background: var(--gold-lt);
   border-color: var(--gold-lt);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--ink-light);
+  border-color: var(--border);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: var(--bg);
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+.btn-generate {
+  background: var(--ink);
+  border-color: transparent;
+  color: #fff;
 }
 
 .btn-generate:disabled,
