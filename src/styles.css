@@ -59,6 +59,115 @@ body {
 }
 
 /* -------------------------------------------------------------------
+   Dashboard
+   ------------------------------------------------------------------- */
+
+.dashboard {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1.5rem;
+  background: var(--color-bg);
+}
+
+.dashboard-inner {
+  width: 100%;
+  max-width: 560px;
+}
+
+.dashboard-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.02em;
+}
+
+.dashboard-subtitle {
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+
+.dashboard-cta {
+  display: inline-block;
+  margin-bottom: 2rem;
+  text-decoration: none;
+  text-align: center;
+}
+
+.dashboard-list-section {
+  margin-top: 0.5rem;
+}
+
+.dashboard-list-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.dashboard-empty {
+  margin: 0;
+  padding: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  background: var(--color-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+
+.dashboard-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dashboard-list-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--color-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+
+.dashboard-list-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.dashboard-list-item-name {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.dashboard-list-item-meta {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.dashboard-list-item-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+/* -------------------------------------------------------------------
    Form container & card
    ------------------------------------------------------------------- */
 
@@ -72,6 +181,24 @@ body {
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
   padding: 2rem;
+}
+
+.form-back-link {
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding: 0;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.form-back-link:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 
 .form-title {
@@ -297,38 +424,74 @@ body {
 }
 
 /* -------------------------------------------------------------------
-   PDF viewer (full-screen ID experience)
+   PDF viewer (card-style embed, ID proportions)
    ------------------------------------------------------------------- */
 
 .pdf-viewer {
-  position: fixed;
-  inset: 0;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #2d3748;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: var(--color-bg);
 }
 
-.pdf-iframe {
-  flex: 1;
+.pdf-viewer-inner {
   width: 100%;
-  height: 100vh;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pdf-embed-card {
+  width: 100%;
+  aspect-ratio: 1.586 / 1;
+  max-height: 60vh;
+  background: var(--color-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.pdf-embed {
+  width: 100%;
+  height: 100%;
+  display: block;
   border: none;
-  min-height: 0;
+}
+
+.pdf-storage-notice {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  text-align: center;
 }
 
 .pdf-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   justify-content: center;
   align-items: center;
-  padding: 1rem 1.5rem;
-  background: #2d3748;
-  flex-shrink: 0;
 }
 
 .pdf-actions .btn {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.btn-outline:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 /* -------------------------------------------------------------------
@@ -354,5 +517,16 @@ body {
     flex-wrap: wrap;
     justify-content: center;
   }
+
+  .pdf-embed-card {
+    max-height: 50vh;
+  }
+}
+
+.form-group input:disabled,
+.form-group input[readonly] {
+  background: #e2e8f0;
+  cursor: not-allowed;
+  opacity: 0.9;
 }
 

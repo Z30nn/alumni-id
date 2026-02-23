@@ -1,4 +1,4 @@
-function PdfViewer({ src, onGenerateAnother }) {
+function PdfViewer({ src, onEdit, onGenerateNew, onBackToDashboard }) {
   const handleDownload = async () => {
     const filename = 'alumni-id.pdf'
     if (src.startsWith('data:')) {
@@ -28,26 +28,50 @@ function PdfViewer({ src, onGenerateAnother }) {
 
   return (
     <div className="pdf-viewer">
-      <iframe
-        src={src}
-        title="Alumni ID"
-        className="pdf-iframe"
-      />
-      <div className="pdf-actions">
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={onGenerateAnother}
-        >
-          Generate Another ID
-        </button>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={handleDownload}
-        >
-          Download ID
-        </button>
+      <div className="pdf-viewer-inner">
+        <div className="pdf-embed-card">
+          <embed
+            src={src}
+            type="application/pdf"
+            className="pdf-embed"
+            title="Alumni ID"
+          />
+        </div>
+        <p className="pdf-storage-notice">
+          This Alumni ID is saved on this device only.
+        </p>
+        <div className="pdf-actions">
+          {onBackToDashboard && (
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={onBackToDashboard}
+            >
+              Back to dashboard
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={onEdit}
+          >
+            Edit ID
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleDownload}
+          >
+            Download ID
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={onGenerateNew}
+          >
+            Generate New ID
+          </button>
+        </div>
       </div>
     </div>
   )

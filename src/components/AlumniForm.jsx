@@ -76,27 +76,45 @@ function fileToBase64(file) {
   })
 }
 
-function AlumniForm({ onSubmit, error, disabled = false }) {
-  const [formData, setFormData] = useState({
-    fullName: '',
-    school: '',
-    graduationYear: '',
-    program: '',
-    studentNumber: '',
+const getInitialFormState = (initialData) => {
+  if (!initialData) {
+    return {
+      fullName: '',
+      school: '',
+      graduationYear: '',
+      program: '',
+      studentNumber: '',
+      photo: null,
+    }
+  }
+  return {
+    fullName: initialData.fullName ?? '',
+    school: initialData.school ?? '',
+    graduationYear: initialData.graduationYear != null ? String(initialData.graduationYear) : '',
+    program: initialData.program ?? '',
+    studentNumber: initialData.studentNumber ?? '',
     photo: null,
-  })
+  }
+}
+
+function AlumniForm({ onSubmit, error, disabled = false, initialData = null, onBackToDashboard = null }) {
+  const [formData, setFormData] = useState(() => getInitialFormState(initialData))
   const [fieldErrors, setFieldErrors] = useState({})
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState(null)
+  const storedPhotoDataUrl = initialData?.photo && typeof initialData.photo === 'string' ? initialData.photo : null
 
   useEffect(() => {
-    if (!formData.photo) {
-      setPhotoPreviewUrl(null)
+    if (formData.photo) {
+      const url = URL.createObjectURL(formData.photo)
+      setPhotoPreviewUrl(url)
+      return () => URL.revokeObjectURL(url)
+    }
+    if (storedPhotoDataUrl) {
+      setPhotoPreviewUrl(storedPhotoDataUrl)
       return
     }
-    const url = URL.createObjectURL(formData.photo)
-    setPhotoPreviewUrl(url)
-    return () => URL.revokeObjectURL(url)
-  }, [formData.photo])
+    setPhotoPreviewUrl(null)
+  }, [formData.photo, storedPhotoDataUrl])
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target
@@ -129,12 +147,15 @@ function AlumniForm({ onSubmit, error, disabled = false }) {
     } else if (/[a-zA-Z]/.test(formData.studentNumber)) {
       errors.studentNumber = 'Student number must not contain letters.'
     }
-    if (!formData.photo) {
+    const hasStoredPhoto = !!storedPhotoDataUrl
+    if (!formData.photo && !hasStoredPhoto) {
       errors.photo = 'Photo is required.'
-    } else if (!formData.photo.type.startsWith('image/')) {
-      errors.photo = 'Only image files are allowed (e.g. JPEG, PNG, GIF, WebP).'
-    } else if (formData.photo.size > MAX_PHOTO_SIZE_BYTES) {
-      errors.photo = `Photo must be 1 MB or smaller (current size: ${(formData.photo.size / 1024).toFixed(0)} KB).`
+    } else if (formData.photo) {
+      if (!formData.photo.type.startsWith('image/')) {
+        errors.photo = 'Only image files are allowed (e.g. JPEG, PNG, GIF, WebP).'
+      } else if (formData.photo.size > MAX_PHOTO_SIZE_BYTES) {
+        errors.photo = `Photo must be 1 MB or smaller (current size: ${(formData.photo.size / 1024).toFixed(0)} KB).`
+      }
     }
 
     setFieldErrors(errors)
@@ -146,8 +167,14 @@ function AlumniForm({ onSubmit, error, disabled = false }) {
     if (!validate()) return
 
     try {
-      // Transform the 1x1 uploaded photo to base64 (full data URL for webhook)
-      const photoDataUrl = await fileToBase64(formData.photo)
+      let photoDataUrl
+      if (formData.photo) {
+        photoDataUrl = await fileToBase64(formData.photo)
+      } else if (storedPhotoDataUrl) {
+        photoDataUrl = storedPhotoDataUrl
+      } else {
+        photoDataUrl = ''
+      }
 
       await onSubmit({
         fullName: formData.fullName.trim(),
@@ -165,6 +192,15 @@ function AlumniForm({ onSubmit, error, disabled = false }) {
   return (
     <div className="form-container">
       <div className="form-card">
+        {onBackToDashboard && (
+          <button
+            type="button"
+            className="form-back-link"
+            onClick={onBackToDashboard}
+          >
+            ← Back to dashboard
+          </button>
+        )}
         <h1 className="form-title">Alumni ID Generator</h1>
         <p className="form-subtitle">Enter your details to generate your digital alumni ID</p>
 
@@ -262,6 +298,9 @@ function AlumniForm({ onSubmit, error, disabled = false }) {
               onChange={handleChange}
               placeholder="Student ID"
               className={fieldErrors.studentNumber ? 'input-error' : ''}
+              disabled={!!initialData}
+              readOnly={!!initialData}
+              aria-readonly={!!initialData}
             />
             {fieldErrors.studentNumber && (
               <span className="field-error">{fieldErrors.studentNumber}</span>
