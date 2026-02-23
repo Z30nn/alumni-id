@@ -143,7 +143,10 @@ function App() {
           graduationYear: formData.graduationYear,
           program: formData.program,
           studentNumber: formData.studentNumber,
+          mobile: formData.mobile,
+          email: formData.email,
           photo: formData.photo,
+          esig: formData.esig,
         },
         createdAt: new Date().toISOString(),
       }
@@ -200,6 +203,10 @@ function App() {
       graduationYear: item.graduationYear,
       program: item.program,
       studentNumber: item.studentNumber,
+      mobile: item.formData?.mobile || '',
+      email: item.formData?.email || '',
+      photo: item.formData?.photo || null,
+      esig: item.formData?.esig || null,
     }))
     setView('viewer')
   }
