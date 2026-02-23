@@ -7,36 +7,7 @@ function formatDate(isoString) {
   }
 }
 
-function downloadPdf(src, filename = 'alumni-id.pdf') {
-  if (src.startsWith('data:')) {
-    const link = document.createElement('a')
-    link.href = src
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    return
-  }
-  try {
-    fetch(src, { mode: 'cors' })
-      .then((res) => res.blob())
-      .then((blob) => {
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = filename
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
-      })
-      .catch(() => window.open(src, '_blank'))
-  } catch {
-    window.open(src, '_blank')
-  }
-}
-
-function Dashboard({ idList, onGenerateNew, onViewId }) {
+function Dashboard({ idList, onGenerateNew, onViewId, onDownloadId }) {
   return (
     <div className="dashboard">
       <div className="dashboard-inner">
@@ -79,7 +50,7 @@ function Dashboard({ idList, onGenerateNew, onViewId }) {
                     <button
                       type="button"
                       className="btn btn-outline btn-sm"
-                      onClick={() => downloadPdf(item.pdfSource, `alumni-id-${item.studentNumber || item.id}.pdf`)}
+                      onClick={() => onDownloadId?.(item)}
                     >
                       Download
                     </button>

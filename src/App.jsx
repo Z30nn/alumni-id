@@ -4,12 +4,17 @@ import AlumniForm from './components/AlumniForm'
 import PdfViewer from './components/PdfViewer'
 import Loader from './components/Loader'
 import { fetchFromScript } from './api/scriptApi'
+import { savePdf, getPdf } from './storage/pdfStorage'
 
-const STORAGE_KEY_PDF = 'alumniIdPdf'
 const STORAGE_KEY_DATA = 'alumniIdData'
 const STORAGE_KEY_LIST = 'alumniIdList'
 
 const DEFAULT_WEBHOOK_URL = 'https://infinityw.com/webhook/5d2d6a91-e43c-4187-be71-97af7b67dff8'
+
+/** Strip pdfSource from items so the list stays small and fits in localStorage. */
+function listWithoutPdf(list) {
+  return list.map(({ pdfSource: _, ...rest }) => rest)
+}
 
 function loadIdList() {
   try {
@@ -22,7 +27,7 @@ function loadIdList() {
 
 function saveIdList(list) {
   try {
-    localStorage.setItem(STORAGE_KEY_LIST, JSON.stringify(list))
+    localStorage.setItem(STORAGE_KEY_LIST, JSON.stringify(listWithoutPdf(list)))
   } catch {
     // ignore quota or parse errors
   }
@@ -38,23 +43,24 @@ function App() {
 
   useEffect(() => {
     let list = loadIdList()
-    const storedPdf = localStorage.getItem(STORAGE_KEY_PDF)
     const storedData = localStorage.getItem(STORAGE_KEY_DATA)
-    if (list.length === 0 && storedPdf && storedData) {
+    if (list.length === 0 && storedData) {
       try {
         const data = JSON.parse(storedData)
-        list = [{
-          id: crypto.randomUUID?.() ?? `id-${Date.now()}`,
+        const id = crypto.randomUUID?.() ?? `id-${Date.now()}`
+        const item = {
+          id,
           fullName: data.fullName ?? '',
           school: data.school ?? '',
           studentNumber: data.studentNumber ?? '',
           program: data.program ?? '',
           graduationYear: data.graduationYear ?? '',
-          pdfSource: storedPdf,
           formData: data,
           createdAt: new Date().toISOString(),
-        }]
+        }
+        list = [item]
         saveIdList(list)
+        // Migrate: if we had a PDF in localStorage before, it's gone now; no way to recover
       } catch {
         // ignore
       }
@@ -136,7 +142,6 @@ function App() {
         studentNumber: formData.studentNumber,
         program: formData.program,
         graduationYear: formData.graduationYear,
-        pdfSource: newPdfSource,
         formData: {
           fullName: formData.fullName,
           school: formData.school,
@@ -151,11 +156,11 @@ function App() {
         createdAt: new Date().toISOString(),
       }
 
+      await savePdf(newItem.id, newPdfSource)
       const nextList = [newItem, ...loadIdList()]
       saveIdList(nextList)
       setIdList(nextList)
 
-      localStorage.setItem(STORAGE_KEY_PDF, newPdfSource)
       localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(newItem.formData))
 
       setPdfSource(newPdfSource)
@@ -180,7 +185,6 @@ function App() {
   }
 
   const handleGenerateNew = () => {
-    localStorage.removeItem(STORAGE_KEY_PDF)
     localStorage.removeItem(STORAGE_KEY_DATA)
     setView('form')
     setError(null)
@@ -194,10 +198,8 @@ function App() {
     setSavedFormData(null)
   }
 
-  const handleViewId = (item) => {
-    setPdfSource(item.pdfSource)
-    localStorage.setItem(STORAGE_KEY_PDF, item.pdfSource)
-    localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(item.formData || {
+  const handleViewId = async (item) => {
+    const formDataToStore = item.formData || {
       fullName: item.fullName,
       school: item.school,
       graduationYear: item.graduationYear,
@@ -207,7 +209,25 @@ function App() {
       email: item.formData?.email || '',
       photo: item.formData?.photo || null,
       esig: item.formData?.esig || null,
-    }))
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(formDataToStore))
+    } catch {
+      // ignore quota for form data
+    }
+    setError(null)
+    let pdf = null
+    try {
+      pdf = await getPdf(item.id)
+    } catch {
+      // IndexedDB failed, fall back to legacy item.pdfSource
+    }
+    const source = pdf ?? item.pdfSource
+    if (!source) {
+      setError('This ID’s PDF is no longer available. You can generate a new one from the form.')
+      return
+    }
+    setPdfSource(source)
     setView('viewer')
   }
 
@@ -215,6 +235,41 @@ function App() {
     setView('form')
     setError(null)
     setSavedFormData(null)
+  }
+
+  const handleDownloadId = async (item) => {
+    let src = null
+    try {
+      src = await getPdf(item.id)
+    } catch {
+      // ignore
+    }
+    src = src ?? item.pdfSource
+    if (!src) return
+    const filename = `alumni-id-${item.studentNumber || item.id}.pdf`
+    if (src.startsWith('data:')) {
+      const link = document.createElement('a')
+      link.href = src
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      return
+    }
+    try {
+      const res = await fetch(src, { mode: 'cors' })
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch {
+      window.open(src, '_blank')
+    }
   }
 
   if (view === 'viewer' && pdfSource) {
@@ -248,6 +303,7 @@ function App() {
       idList={idList}
       onGenerateNew={handleGoToForm}
       onViewId={handleViewId}
+      onDownloadId={handleDownloadId}
     />
   )
 }
