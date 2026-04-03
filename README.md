@@ -59,7 +59,7 @@ alumni-id/
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Z30nn/alumni-id.git
    cd alumni-id
    ```
 
