@@ -1,0 +1,246 @@
+{
+  "name": "Alumni ID Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5d2d6a91-e43c-4187-be71-97af7b67dff8",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -672,
+        928
+      ],
+      "id": "5dbba1ee-4cc1-4277-b4b3-226fbaed3a6e",
+      "name": "Webhook",
+      "webhookId": "5d2d6a91-e43c-4187-be71-97af7b67dff8",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"pdfBase64\": \"{{ $json.data }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        928
+      ],
+      "id": "4b067a11-5570-416a-8e48-1b7dffeba1c1",
+      "name": "Respond to Webhook",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.body.logoFileId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -448,
+        928
+      ],
+      "id": "50b7937f-997b-4cea-8d04-107ed1bb4b8a",
+      "name": "Logo",
+      "retryOnFail": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "OiTZMBGG5HuG8BMp",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {
+          "keepSource": "binary"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        928
+      ],
+      "id": "261620d6-82fa-4b7e-9fd4-d316b55844af",
+      "name": "Logo to Base64",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $('Webhook').first().json.body || {};\nconst template = body.templateContent ?? \"\";\n\nconst fullName = body.fullName ?? \"\";\nconst parts = fullName.trim().split(/\\s+/);\nconst lastName = parts.length > 0\n  ? parts[parts.length - 1].toUpperCase()\n  : \"\";\nconst firstName = parts.length > 1\n  ? parts.slice(0, -1).join(\" \")\n  : \"\";\n\nconst alumniID = body.studentNumber ?? \"\";\nconst program = body.program ?? \"\";\nconst gradYear = body.graduationYear ?? \"\";\nconst school = body.school ?? \"\";\nconst mobile = body.mobile ?? \"\";\nconst email = body.email ?? \"\";\n\nlet idPhotoBase64 = body.photo ?? \"\";\nlet idSigBase64 = body.esig ?? \"\";\n\nlet logoPhotoBase64 = $input.first().json.data ?? \"\";\nlet logoPhotoMimeTipe = $input.first().binary.data.mimeType ?? \"\";\n\nconst html = `\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Alumni ID Card</title>\n\n    <!-- Poppins (works if your PDF generator/browser has internet access) -->\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap\" rel=\"stylesheet\">\n\n    <style>\n      @page {\n        size: 85.598mm 53.975mm;\n        margin: 0;\n      }\n      \n      html, body {\n        width: 85.598mm;\n        height: 53.975mm;\n        margin: 0;\n        padding: 0;\n        font-family: \"Poppins\", Arial, sans-serif;\n      }\n      /* ================= THEME ================= */\n      :root {\n          ${template}\n      }\n\n      /* ================= FRONT CARD ================= */\n      * {\n          margin: 0;\n          padding: 0;\n          box-sizing: border-box;\n      }\n      \n      body {\n        font-family: 'Arial', sans-serif;\n        background: white;\n        margin: 0;\n        padding: 0;\n      }\n      \n      /* ID Card Container */\n      .id-card {\n          width: 85.598mm;\n          height: 53.975mm;\n          position: relative;\n          background: white;\n          overflow: hidden;\n      }\n      \n      .id-background {\n          position: absolute;\n          width: 100%;\n          height: 100%;\n          z-index: 1;\n      }\n      \n      /* Top Section - Complex multi-layer design */\n      .bg-top-section {\n          position: absolute;\n          top: 0;\n          left: 0;\n          right: 0;\n          height: 23%;\n          overflow: hidden;\n      }\n      \n      /* Dark triangle (top left) */\n      .bg-triangle-dark {\n          position: absolute;\n          width: 0;\n          height: 0;\n          border-style: solid;\n          border-width: 100px 0 0 280px;\n          border-color: transparent transparent transparent var(--color-triangle-dark);\n          top: 0;\n          left: 0;\n      }\n      \n      /* Gradient background (top) */\n      .bg-top-gradient {\n          position: absolute;\n          top: 0;\n          left: 0;\n          right: 0;\n          height: 100%;\n          background: linear-gradient(90deg, \n              var(--color-top-medium-gradient) 0%, \n              var(--color-top-medium-gradient) 30%, \n              var(--color-top-light-gradient) 70%, \n              var(--color-top-light-gradient) 100%);\n      }\n      \n      /* Curved wave element (top right) */\n      .bg-wave-top {\n          position: absolute;\n          top: 0;\n          right: 0;\n          width: 40%;\n          height: 200%;\n          background: var(--color-wave-top);\n          opacity: 0.5;\n          border-radius: 50% 0 0 50%;\n          transform: translateX(20%);\n      }\n      \n      /* Middle white/gray section */\n      .bg-body {\n          position: absolute;\n          top: 23%;\n          left: 0;\n          right: 0;\n          height: 67%;\n          background: var(--color-body-bg);\n      }\n      \n      /* Bottom Section - Gradient with diagonal cut */\n      .bg-footer {\n          position: absolute;\n          bottom: 0;\n          left: 0;\n          right: 0;\n          height: 13%;\n          background: linear-gradient(90deg, \n              var(--color-footer-left) 0%, \n              var(--color-footer-left) 40%, \n              var(--color-footer-right) 100%);\n          clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);\n      }\n      \n      /* Diagonal accent on footer (bottom right) */\n      .bg-footer-accent {\n          position: absolute;\n          bottom: 0;\n          right: 0;\n          width: 30%;\n          height: 100%;\n          background: linear-gradient(135deg, \n              transparent 0%, \n              rgba(125, 211, 240, 0.3) 100%);\n          clip-path: polygon(50% 30, 100% 0, 100% 100%, 0 100%);\n      }\n      \n      /* Content Overlay */\n      .id-content {\n          position: absolute;\n          width: 100%;\n          height: 100%;\n          z-index: 2;\n      }\n      \n      /* Header Section */\n      .header {\n          position: absolute;\n          top: 1.3mm;\n          left: 3mm;\n          right: 0;\n          display: flex;\n          align-items: center;\n          gap: 3mm;\n      }\n      \n      .school-logo {\n          width: 10mm;\n          height: 10mm;\n          border-radius: 50%;\n          background: #d3d3d3;\n          overflow: hidden;\n          flex-shrink: 0;\n          display: flex;\n          align-items: center;\n          justify-content: center;\n      }\n      \n      .school-logo img {\n          width: 100%;\n          height: 100%;\n          object-fit: cover;\n      }\n      \n      .school-name {\n          color: white;\n          font-size: 4mm;\n          font-weight: bold;\n          letter-spacing: 0mm;\n          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);\n      }\n      \n      /* Main Content Section */\n      .main-content {\n          position: absolute;\n          top: 15mm;\n          left: 5mm;\n          right: 5mm;\n          display: flex;\n          gap: 5mm;\n      }\n      \n      /* Photo Section */\n      .photo-container {\n          width: 30mm;\n          height: 30mm;\n          border: 0.5mm solid var(--photo-border-color);\n          border-radius: 1mm;\n          overflow: hidden;\n          flex-shrink: 0;\n          background: white;\n          display: flex;\n          align-items: center;\n          justify-content: center;\n          position: relative;\n      }\n      \n      .photo-container img {\n          width: 100%;\n          height: 100%;\n          object-fit: cover;\n      }\n      \n      /* Alumni Number overlaid on photo */\n      .alumni-number-overlay {\n          position: absolute;\n          bottom: 0;\n          left: 0;\n          right: 0;\n          background: rgba(255, 255, 255, 0.95);\n          padding: 0.8mm;\n          text-align: center;\n      }\n      \n      .alumni-number {\n          font-size: 2.8mm;\n          color: #000;\n          font-weight: bold;\n          letter-spacing: 0.2mm;\n      }\n      \n      /* Alumni Info Section */\n      .alumni-info {\n          flex: 1;\n          display: flex;\n          flex-direction: column;\n          justify-content: flex-start;\n          padding-top: 3mm;\n      }\n      \n      .alumni-name {\n          font-weight: bold;\n          color: #000;\n          line-height: 1.15;\n          margin-bottom: 1.5mm;\n      }\n      \n      .name-line-1 {\n          display: block;\n          font-size: 6mm;\n      }\n      \n      .name-line-2 {\n          display: block;\n          font-size: 4mm;\n      }\n      \n      .program {\n          font-size: 2mm;\n          color: #333;\n          font-weight: 600;\n          margin-bottom: 0.8mm;\n          width: 40mm;\n      }\n      \n      .graduation-year {\n          font-size: 3mm;\n          color: #000;\n          font-weight: 600;\n      }\n      \n      /* Footer Section */\n      .footer {\n          position: absolute;\n          bottom: 1mm;\n          left: 0;\n          right: 0;\n          height: 5mm;\n          display: flex;\n          align-items: center;\n          justify-content: center;\n      }\n      \n      .footer-title {\n          color: white;\n          font-size: 4mm;\n          font-weight: bold;\n          letter-spacing: 0.75mm;\n          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);\n      }\n      \n      /* Print styles */\n      @media print {\n          body {\n              background: white;\n              padding: 0;\n              margin: 0;\n          }\n      \n          .id-card {\n              box-shadow: none;\n              page-break-after: always;\n          }\n      }\n\n      /* ================= BACK CARD ================= */\n      .back-card {\n        width:85.598mm;\n        height:53.975mm;\n        position:relative;\n        overflow:hidden;\n      }\n      \n      .back-border{\n        position:absolute;\n        inset:0;\n        padding:2.2mm;\n        background: linear-gradient(\n          135deg,\n          var(--color-triangle-dark) 0%,\n          var(--color-top-medium-gradient) 35%,\n          var(--color-top-light-gradient) 65%,\n          var(--color-footer-left) 85%,\n          var(--color-footer-right) 100%\n        );\n      }\n      \n      .back-safe{\n        width:100%;\n        height:100%;\n        background:#fff;\n        padding:3mm;\n        display:flex;\n        flex-direction:column;\n        justify-content: space-between;\n      }\n      \n      .terms-block{\n        flex: 0 0 auto;\n      }\n      \n      .terms{\n        padding-left:4.2mm;\n        font-size:2.2mm;\n        line-height:1.2;\n        color:#111;\n      }\n      \n      .terms li{\n        margin-bottom:0.8mm;\n      }\n      \n      .bottom-row{\n        display:flex;\n        justify-content:space-between;\n        gap:4mm;\n        align-items:flex-end;\n      }\n      \n      .return-block{\n        flex:1;\n        font-size:2mm;\n        line-height:1.2;\n      }\n      \n      .return-title{ font-weight:600; margin-bottom:0.8mm; }\n      .return-school{ font-weight:700; }\n      .return-or{ margin:0.8mm 0; font-weight:700; }\n      \n      .signature-block{\n        width:34mm;\n        text-align:right;\n      }\n      \n      .sig-line{\n        border-bottom:0.35mm solid rgba(0,0,0,0.55);\n        height:0;\n        width:100%;\n      }\n      \n      .sig-caption{\n        margin-top:1mm;\n        font-size:2.5mm;\n        color:#444;\n      }\n      \n      .signature-img{\n        width:100%;\n        max-height:12mm;\n        object-fit:contain;\n        margin-bottom:1mm;\n      }\n    </style>\n</head>\n<body>\n    <!-- ================= FRONT ================= -->\n    <div class=\"id-card\">\n        <!-- CSS-Based Background - Exact Replica -->\n        <div class=\"id-background\">\n            <!-- Top Section Layers -->\n            <div class=\"bg-top-section\">\n                <div class=\"bg-top-gradient\"></div>\n                <div class=\"bg-wave-top\"></div>\n                <div class=\"bg-triangle-dark\"></div>\n            </div>\n            \n            <!-- Middle Section -->\n            <div class=\"bg-body\"></div>\n            \n            <!-- Bottom Section -->\n            <div class=\"bg-footer\">\n                <div class=\"bg-footer-accent\"></div>\n            </div>\n        </div>\n\n        <!-- Content Overlay -->\n        <div class=\"id-content\">\n            <!-- Header -->\n            <div class=\"header\">\n                <div class=\"school-logo\">\n                    <img id=\"schoolLogo\" src=\"data:${logoPhotoMimeTipe};base64,${logoPhotoBase64}\" alt=\"School Logo\">\n                </div>\n                <div class=\"school-name\" id=\"schoolName\">${school}</div>\n            </div>\n\n            <!-- Main Content -->\n            <div class=\"main-content\">\n                <!-- Photo Container with Alumni Number -->\n                <div class=\"photo-container\">\n                    <img id=\"alumniPhoto\" src=\"${idPhotoBase64}\" alt=\"Alumni Photo\">\n                    <div class=\"alumni-number-overlay\">\n                        <div class=\"alumni-number\" id=\"alumniNumber\">${alumniID}</div>\n                    </div>\n                </div>\n\n                <!-- Alumni Info -->\n                <div class=\"alumni-info\">\n                    <div class=\"alumni-name\">\n                        <span class=\"name-line-1\" id=\"lastName\">${lastName}</span>\n                        <span class=\"name-line-2\" id=\"firstName\">${firstName}</span>\n                    </div>\n                    <div class=\"program\" id=\"program\">${program}</div>\n                    <div class=\"graduation-year\" id=\"graduationYear\">Class of ${gradYear}</div>\n                </div>\n            </div>\n\n            <!-- Footer -->\n            <div class=\"footer\">\n                <div class=\"footer-title\">ALUMNI ID</div>\n            </div>\n        </div>\n    </div>\n\n    <!-- ================= BACK ================= -->\n    <div class=\"id-card back-card\">\n      <div class=\"back-border\">\n        <div class=\"back-safe\">\n    \n          <div class=\"terms-block\">\n            <ol class=\"terms\">\n              <li>\n                This person whose picture and signature appear on this card is a\n                <strong>bona fide</strong> member of the ${school} Alumni Association.\n              </li>\n              <li>This card is non-transferable but replaceable for a fine.</li>\n              <li>The holder of this card is entitled to the benefits of the Alumni Association.</li>\n              <li>\n                This card also ensures the holder to avail of services offered by\n                ${school} subject to existing rules and regulations.\n              </li>\n            </ol>\n          </div>\n    \n          <div class=\"bottom-row\">\n    \n            <div class=\"return-block\">\n              <div class=\"return-title\">If found please return to:</div>\n              <div class=\"return-school\">${school}</div>\n              <div class=\"return-or\">OR</div>\n              <div class=\"return-contact\">\n                Contact: ${mobile} <br/>\n                Email: ${email}\n              </div>\n            </div>\n    \n            <div class=\"signature-block\">\n              ${\n                idSigBase64\n                  ? `<img class=\"signature-img\" src=\"${idSigBase64}\" />`\n                  : `<div class=\"sig-line\"></div>`\n              }\n              <div class=\"sig-caption\">Card Holder’s Signature</div>\n            </div>\n    \n          </div>\n        </div>\n      </div>\n    </div>\n</body>\n</html>\n`;\n\nreturn [\n  {\n    json: {\n      html\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        928
+      ],
+      "id": "529b50f5-cf99-4623-addf-81362031263f",
+      "name": "ID Template",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdfshift.io/v3/convert/pdf",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "source",
+              "value": "={{ $json.html }}"
+            },
+            {
+              "name": "sandbox",
+              "value": "true"
+            },
+            {
+              "name": "format",
+              "value": "3.37inx2.13in"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        928
+      ],
+      "id": "d8ffd90f-794a-464f-b435-eeb34bb79cad",
+      "name": "HTML to PDF",
+      "retryOnFail": true,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "MlQwXJiuXAQSO58A",
+          "name": "PDFShift"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        928
+      ],
+      "id": "fc90088e-608f-477a-bda6-6dd2bd74643c",
+      "name": "PDF to Base64",
+      "retryOnFail": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Logo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Logo": {
+      "main": [
+        [
+          {
+            "node": "Logo to Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Logo to Base64": {
+      "main": [
+        [
+          {
+            "node": "ID Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ID Template": {
+      "main": [
+        [
+          {
+            "node": "HTML to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML to PDF": {
+      "main": [
+        [
+          {
+            "node": "PDF to Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF to Base64": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "versionId": "7f85f164-f1fd-4127-af47-3627d7435972",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d4b369ee1c5017946269ce35edcd80474f1777dab00b367dfa078080280dbe13"
+  },
+  "id": "HkGv2rvp5qkhat4Q",
+  "tags": []
+}
