@@ -1,0 +1,8 @@
+--color-triangle-dark: #800000;
+--color-top-medium-gradient: #6F0000;
+--color-top-light-gradient: #5C0000;
+--color-wave-top: #6F0000;
+--color-body-bg: #FFFFFF;
+--color-footer-left: #DAA520;
+--color-footer-right: #FFDF00;
+--photo-border-color: #000000;
